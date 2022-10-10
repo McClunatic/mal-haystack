@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "mal-haystack"
+version = "0.1.0"
+description = ""
+authors = ["Brian McClune <brian.mcclune@unnpp.gov>"]
+readme = "README.md"
+packages = [{include = "mal_haystack"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
