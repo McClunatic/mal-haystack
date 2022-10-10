@@ -46,5 +46,6 @@ Then, use the Kaggle CLI (made available once you've run `poetry install`)
 to download the dataset:
 
 ```shell
+cd data
 kaggle datasets download stoicstatic/mal-top-10k-anime-details
 ```
