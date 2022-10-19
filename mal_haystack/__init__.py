@@ -2,12 +2,10 @@
 
 import pathlib
 import zipfile
-
 from typing import Any, Dict, List, Optional
 
 import langdetect
 import pandas as pd
-
 from haystack import Document
 from haystack.nodes import BaseComponent
 from haystack.nodes.file_converter.base import KNOWN_LIGATURES
