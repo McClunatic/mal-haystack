@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Optional
+"""The MAL Haystack DataFrame to document converter node."""
+
+from typing import Dict, List, Optional
 
 import langdetect
 import pandas as pd
@@ -8,11 +10,15 @@ from haystack.nodes.file_converter.base import KNOWN_LIGATURES
 from tqdm.auto import tqdm
 
 
-class SeriesConverter(BaseComponent):
-    """Component for converting :class:`pandas.DataFrame` and
-    :class:`pandas.Series` to :class:`haystack.Document` objects.
+class DataFrameConverter(BaseComponent):
+    """Component for converting :class:`pandas.DataFrame` objects
+    to :class:`haystack.Document` objects.
 
     Parameters:
+        document_column: The DataFrame column containing text to convert
+            to :class:`haystack.Document` objects.
+        meta_columns: Additional DataFrame metadata columns to append
+            in the returned documents.
         valid_languages: Valid languages from list specified in ISO 639-1
             (https://en.wikipedia.org/wiki/ISO_639-1) format.
             This option can be used to add test for encoding errors. If the
@@ -31,12 +37,16 @@ class SeriesConverter(BaseComponent):
 
     def __init__(
         self,
+        document_column: Optional[str] = None,
+        meta_columns: Optional[List[str]] = None,
         valid_languages: Optional[List[str]] = None,
         id_hash_keys: Optional[List[str]] = None,
         progress_bar: bool = True,
     ):
         """Constructor."""
 
+        self.document_column = document_column
+        self.meta_columns = meta_columns
         self.valid_languages = valid_languages
         self.id_hash_keys = id_hash_keys
         self.progress_bar = progress_bar
@@ -71,25 +81,22 @@ class SeriesConverter(BaseComponent):
 
     def convert(
         self,
-        series: pd.Series | str,
-        meta: Optional[Dict[str, Any]],
         dataframe: Optional[pd.DataFrame] = None,
-        dataframe_meta_cols: Optional[List[str]] = None,
+        document_column: Optional[str] = None,
+        meta_columns: Optional[List[str]] = None,
         valid_languages: Optional[List[str]] = None,
         id_hash_keys: Optional[List[str]] = None,
     ):
         """Convert `series` to a list of :class:`haystack.Document` objects.
 
         Arguments:
-            series: The source series or `dataframe` column to convert.
-            meta: Dictionary of meta key-value pairs to append in the returned
-                document.
             dataframe: The source :class:`pandas.DataFrame` to extract `series`
                 column from. This argument is required when `series` is a
                 string.
-            dataframe_meta_cols: If `dataframe` is a :class:`pandas.DataFrame`,
-                the additional metadata columns to append in the returned
-                documents.
+            document_column: The `dataframe` column containing text to convert
+                to :class:`haystack.Document` objects.
+            meta_columns: Additional `dataframe` metadata columns to append
+                in the returned documents.
             valid_languages: Valid languages from list specified in ISO 639-1
                 (https://en.wikipedia.org/wiki/ISO_639-1) format.
                 This option can be used to add test for encoding errors. If the
@@ -104,18 +111,16 @@ class SeriesConverter(BaseComponent):
                 defined metadata.
         """
 
+        if document_column is None:
+            document_column = self.document_column
+        if meta_columns is None:
+            meta_columns = self.meta_columns
         if valid_languages is None:
             valid_languages = self.valid_languages
         if id_hash_keys is None:
             id_hash_keys = self.id_hash_keys
 
-        if isinstance(series, str):
-            if dataframe is None:
-                raise ValueError(
-                    'Argument `dataframe` is required when `series` is of '
-                    'type `str`!'
-                )
-            series = dataframe[series]
+        series = dataframe[document_column]
 
         documents = []
         for idx, content in tqdm(
@@ -125,8 +130,8 @@ class SeriesConverter(BaseComponent):
             desc='Extracting Series text',
         ):
             metadata = None
-            if dataframe is not None and dataframe_meta_cols:
-                cols = dataframe_meta_cols
+            if dataframe is not None and meta_columns:
+                cols = meta_columns
                 metadata = dataframe.loc[idx][cols].to_dict()
             documents.append(Document(
                 content=content,
@@ -139,9 +144,9 @@ class SeriesConverter(BaseComponent):
 
     def run(
         self,
-        series: List[pd.Series] | List[str] | str,
-        meta: Optional[List[str]],
         dataframes: Optional[List[pd.DataFrame]] = None,
+        document_column: Optional[str] = None,
+        meta_columns: Optional[List[str]] = None,
         valid_languages: Optional[List[str]] = None,
         id_hash_keys: Optional[List[str]] = None,
         known_ligatures: Dict[str, str] = KNOWN_LIGATURES,
@@ -149,13 +154,13 @@ class SeriesConverter(BaseComponent):
         """Extract text from a :class:`pandas.Series` object.
 
         Arguments:
-            series: The source series objects or `dataframe` column names to
-                extract text from.
-            meta: If `dataframe` is a :class:`pandas.DataFrame`, the additional
-                metadata columns to append in the returned documents.
             dataframes: The source :class:`pandas.DataFrame` objects to extract
                 `series` columns from. This argument is required when `series`
                 is a string or list of strings.
+            document_column: The `dataframe` column containing text to convert
+                to :class:`haystack.Document` objects.
+            meta_columns: Additional `dataframe` metadata columns to append
+                in the returned documents.
             valid_languages: Valid languages from list specified in ISO 639-1
                 (https://en.wikipedia.org/wiki/ISO_639-1) format.
                 This option can be used to add test for encoding errors. If the
@@ -181,16 +186,12 @@ class SeriesConverter(BaseComponent):
                 the documents.
         """
 
-        # Convert series into documents
-        if isinstance(series, str):
-            series = [series] * len(dataframes)
-
         documents = []
-        for serie, dataframe in zip(series, dataframes):
+        for dataframe in dataframes:
             documents.extend(self.convert(
-                serie,
-                meta=meta,
-                dataframe=dataframe,
+                dataframe,
+                document_column=document_column,
+                meta_columns=meta_columns,
                 valid_languages=valid_languages,
                 id_hash_keys=id_hash_keys,
             ))
