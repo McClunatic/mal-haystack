@@ -6,7 +6,7 @@ from typing import List
 
 from haystack.pipelines import Pipeline
 
-from mal_haystack import SeriesConverter, ZipDataFramer, ZipLister
+from mal_haystack.nodes import SeriesConverter, ZipDataFramer, ZipLister
 
 
 def get_parser() -> argparse.ArgumentParser:
