@@ -7,7 +7,8 @@ import pandas as pd
 from haystack import Document
 from haystack.nodes import BaseComponent
 from haystack.nodes.file_converter.base import KNOWN_LIGATURES
-from tqdm.auto import tqdm
+# TODO: Investigate why tqdm.auto does not work properly with VS Code
+from tqdm import tqdm
 
 
 class DataFrameConverter(BaseComponent):
@@ -127,7 +128,7 @@ class DataFrameConverter(BaseComponent):
             series.items(),
             total=len(series),
             disable=not self.progress_bar,
-            desc='Extracting Series text',
+            desc='Extracting DataFrame documents',
         ):
             metadata = None
             if dataframe is not None and meta_columns:

@@ -6,7 +6,7 @@ from typing import List
 
 from haystack.pipelines import Pipeline
 
-from mal_haystack.nodes import SeriesConverter, ZipDataFramer, ZipLister
+from mal_haystack.nodes import DataFrameConverter, ZipDataFramer, ZipLister
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -38,18 +38,20 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     lister = ZipLister()
     framer = ZipDataFramer()
-    converter = SeriesConverter()
+    converter = DataFrameConverter(
+        document_column='Review',
+        meta_columns=['Anime Title', 'Anime URL', 'Overall Rating'],
+    )
     p = Pipeline()
     p.add_node(component=lister, name='ZipLister', inputs=['File'])
     p.add_node(component=framer, name='ZipFramer', inputs=['ZipLister'])
     p.add_node(
-        component=converter, name='SeriesConverter', inputs=['ZipFramer'])
+        component=converter, name='DataFrameConverter', inputs=['ZipFramer'])
 
     result = p.run(
         file_paths=args.zip_files,
         params={
             'ZipLister': {'valid_names': ['MAL Anime Reviews 85k.csv']},
-            'SeriesConverter': {'series': 'Review'},
         },
     )
     print(
