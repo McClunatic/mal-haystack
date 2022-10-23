@@ -130,10 +130,10 @@ class DataFrameConverter(BaseComponent):
             disable=not self.progress_bar,
             desc='Extracting DataFrame documents',
         ):
-            metadata = None
+            metadata = {'index': idx}
             if dataframe is not None and meta_columns:
                 cols = meta_columns
-                metadata = dataframe.loc[idx][cols].to_dict()
+                metadata |= dataframe.loc[idx][cols].to_dict()
             documents.append(Document(
                 content=content,
                 content_type='text',
