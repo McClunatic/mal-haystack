@@ -49,3 +49,14 @@ to download the dataset:
 cd data
 kaggle datasets download stoicstatic/mal-top-10k-anime-details
 ```
+
+## Example usage
+
+Try running
+
+```powershell
+python -m mal_haystack Review "MAL Anime Reviews 85k.csv" \
+    -z .\data\mal-top-10k-anime-details.zip \
+    -m "Anime Title" -m "Anime URL" -m "Overall Rating" \
+    -q "Who are the main characters?"
+```
