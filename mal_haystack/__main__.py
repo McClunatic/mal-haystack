@@ -9,7 +9,7 @@ from typing import List
 from haystack.document_stores import InMemoryDocumentStore
 from haystack.nodes.reader import FARMReader
 from haystack.pipelines import ExtractiveQAPipeline
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from mal_haystack.nodes import EmbeddingRetriever, ZipLister
 from mal_haystack.pipelines import ReviewIndexer, ZippedReviewIndexer
@@ -127,7 +127,9 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     document_generator = document_store.get_all_documents_generator()
     metadata_records = []
-    for document in document_generator:
+    document_count = document_store.get_document_count()
+    desc = 'Extracting document metadata'
+    for document in tqdm(document_generator, desc=desc, total=document_count):
 
         # Get column metadata
         metadata = document.meta.copy()
