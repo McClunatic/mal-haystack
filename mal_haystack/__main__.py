@@ -121,6 +121,7 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     reader = FARMReader(
         'deepset/roberta-base-squad2',
+        num_processes=1,  # Eliminate multiprocessing hangups
         use_gpu=not args.no_gpu,
     )
     query_pipeline = ExtractiveQAPipeline(reader, retriever)
