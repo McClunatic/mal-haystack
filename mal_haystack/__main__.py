@@ -15,6 +15,22 @@ from mal_haystack.nodes import EmbeddingRetriever, ZipLister
 from mal_haystack.pipelines import ReviewIndexer, ZippedReviewIndexer
 
 
+def _configure_logger() -> logging.Logger:
+    """Configures the main logger.
+
+    Returns:
+        The main logger.
+    """
+
+    hnd = logging.StreamHandler()
+    fmt = logging.Formatter(fmt='%(asctime)s|%(levelname)-1s|%(message)s')
+    hnd.setFormatter(fmt)
+    log = logging.getLogger('mal-haystack')
+    log.addHandler(hnd)
+    log.propagate = False
+    return log
+
+
 def get_parser() -> argparse.ArgumentParser:
     """Gets the main MAL Haystack CLI argument parser.
 
@@ -76,7 +92,11 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
 
     args = get_parser().parse_args(argv)
 
+    logger = _configure_logger()
+    logger.setLevel(logging.INFO)
+
     if args.debug:
+        logger.setLevel(logging.DEBUG)
         logging.getLogger('haystack.pipelines.base').setLevel(logging.DEBUG)
 
     # Confirm at least 1 metadata column or query
@@ -135,8 +155,15 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
         # Get column metadata
         metadata = document.meta.copy()
 
+        index = metadata['index']
+
+        # TODO: Get tqdm working to report this data
+        if (index + 1) % 10 == 0:
+            logger.info(
+                'Processing document %s of %s', index + 1, document_count)
+
         # Get QA metadata
-        filters = {'index': {'$eq': metadata['index']}}
+        filters = {'index': {'$eq': index}}
         if args.query:
             result = query_pipeline.run_batch(args.query, params={
                 'Retriever': {'filters': filters},
@@ -145,9 +172,15 @@ def main(argv: List[str] = sys.argv[1:]) -> int:
                 zip(result['queries'], result['answers'])
             ):
                 metadata[f'Q{idx + 1}'] = query
-                metadata[f'Q{idx + 1} answer'] = answers[0].answer
-                metadata[f'Q{idx + 1} score'] = answers[0].score
-                metadata[f'Q{idx + 1} context'] = answers[0].context
+                if answers is None or len(answers) == 0:
+                    logger.warning('No answers for document: %s', metadata)
+                    metadata[f'Q{idx + 1} answer'] = ''
+                    metadata[f'Q{idx + 1} score'] = 0.0
+                    metadata[f'Q{idx + 1} context'] = ''
+                else:
+                    metadata[f'Q{idx + 1} answer'] = answers[0].answer
+                    metadata[f'Q{idx + 1} score'] = answers[0].score
+                    metadata[f'Q{idx + 1} context'] = answers[0].context
 
         metadata_records.append(metadata)
 
