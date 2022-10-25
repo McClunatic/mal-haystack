@@ -21,7 +21,7 @@ SQL table.
 MAL Haystack capitalizes on Pandas native support for creating DataFrame
 objects directly from CSV files:
 
-.. code-block: python
+.. code-block:: python
 
    import pandas as pd
 
@@ -33,7 +33,7 @@ example, "Title" column data can be extracted from the third row
 (remember: row 3 with zero-based indexing will have index 2) can be
 done as follows:
 
-.. code-block: python
+.. code-block:: python
 
    >>> import pandas as pd
    >>> dataframe = pd.read_csv('MAL Anime Reviews 85k.csv')
@@ -86,23 +86,25 @@ very similar to those in the figure above. With some custom nodes (TODO: footnot
 Haystack enables construction of indexing pipelines to convert strings embedded
 in CSV columns to documents in a document store:
 
-.. code-block: python
+.. code-block:: python
 
    from haystack import Pipeline
 
-   # NOTE: converter, preprocessor, document_store created out of scope
+   # NOTE: converter, preprocessor, doc_store created out of scope
 
    p = Pipeline()
    p.add_node(component=converter, name="CSVConverter", inputs=["File"])
-   p.add_node(component=preprocessor, name="PreProcessor", inputs=["CSVConverter"])
-   p.add_node(component=document_store, name="DocumentStore", inputs=["PreProcessor"])
+   p.add_node(
+       component=preprocessor, name="PreProcessor", inputs=["CSVConverter"])
+   p.add_node(
+       component=doc_store, name="DocumentStore", inputs=["PreProcessor"])
 
    p.run(file_paths=["MAL Anime Reviews 85k.csv"])
 
 With a document store prepared, a querying pipeline for question answering
 might look like this:
 
-.. code-block: python
+.. code-block:: python
 
    from haystack import Pipeline
 
