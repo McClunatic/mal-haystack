@@ -10,6 +10,11 @@ Welcome to MAL Haystack's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   background
+   objectives
+   technologies
+   implementation
+   user_guide
 
 
 Indices and tables
