@@ -71,6 +71,9 @@ instance/
 # Sphinx documentation
 docs/_build/
 
+# Sphinx mermaid local node_modules
+docs/node_modules/
+
 # PyBuilder
 .pybuilder/
 target/
